@@ -12,7 +12,7 @@ import configureStore from './store/store';
 const store = configureStore();
 
 ReactDOM.render(
-  <React.StrictMode>
+  <>
     <Provider store={store}>
       <ThemeProvider theme={theme}>
       {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
@@ -22,6 +22,6 @@ ReactDOM.render(
         </Router>
       </ThemeProvider>
     </Provider>
-  </React.StrictMode>,
+  </>,
   document.getElementById('root')
 );
