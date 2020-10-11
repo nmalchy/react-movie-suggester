@@ -33,6 +33,8 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 const MovieForm = () => {
+  
+  const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
 
   const classes = useStyles();
   const [genreChoice, setGenreChoice] = useState(0);
@@ -112,8 +114,7 @@ const MovieForm = () => {
                   {movieList.map((movie) =>
                     <ListItem>
                       <ListItemAvatar>
-                        <Avatar>
-                        </Avatar>
+                        <Avatar src={MOVIE_POSTER_API_URL + movie['backdrop_path']} />
                       </ListItemAvatar>
                       <ListItemText
                         primary={movie['title']}
