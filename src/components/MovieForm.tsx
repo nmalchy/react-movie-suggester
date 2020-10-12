@@ -14,6 +14,8 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
+import Pagination from '@material-ui/lab/Pagination';
+import Skeleton from '@material-ui/lab/Skeleton';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import axios from 'axios';
 
@@ -29,37 +31,56 @@ const useStyles = makeStyles((theme: Theme) =>
     title: {
       margin: theme.spacing(4, 0, 2),
     },
+    paginator: {
+      justifyContent: "center",
+      padding: "10px"
+    }
   }),
 );
 
 const MovieForm = () => {
   
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
-
   const classes = useStyles();
-  const [genreChoice, setGenreChoice] = useState(0);
-  const [genreList, setGenreList] = useState([]);
-  const [movieApiUrl, setMovieApiUrl] = useState('');
-  const [movieList, setMovieList] = useState([]);
+  const [genreChoice, setGenreChoice] = useState<number | undefined>(undefined);
+  const [genreList, setGenreList] = useState<Array<any>>([]);
+  const [movieApiUrl, setMovieApiUrl] = useState<string>('');
+  const [movieList, setMovieList] = useState<Array<string>>([]);
+  const itemsPerPage = 10;
+  const [page, setPage] = useState(1);
+  const [numberOfPages, setNumberOfPages] = useState(Math.ceil(movieList.length / itemsPerPage));
 
-
-  const getGenres = async () => {
+  const getGenres = async (): Promise<void> => {
     await axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US`)
           .then(response => setGenreList(response.data.genres))
-          .catch((error) => console.log('getGenres HTTP GET Request Error response: ', error))
+          .catch((error) => console.log('getGenres HTTP GET Request Error response:', error))
   }
 
-  const handleGenreChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setGenreChoice(event.target.value as number);
-  };
-
-  const handleGetMoviesClick = async () => {
-    await axios.get(movieApiUrl)
+  const handlePageChange = (_event: any, value: React.SetStateAction<number>) => {
+    setPage(value)
+    return axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${value}&with_genres=${genreChoice}`)
           .then(response => {
+            console.log('Initial response; ', response)
             console.log(response.data.results)
             setMovieList(response.data.results)
+            setNumberOfPages(response.data.total_pages)
           })
-          .catch((error) => console.log('handleGetMoviesClick HTTP GET Request Error response: ', error))
+          .catch((error) => console.log('getMovies HTTP GET Request Error response:', error))
+  };
+
+  const handleGenreChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setGenreChoice(event.target.value as unknown as number);
+  };
+
+  const getMovies = async (): Promise<void> => {
+    await axios.get(movieApiUrl)
+          .then(response => {
+            console.log('Initial response; ', response)
+            console.log(response.data.results)
+            setMovieList(response.data.results)
+            setNumberOfPages(response.data.total_pages)
+          })
+          .catch((error) => console.log('getMovies HTTP GET Request Error response:', error))
   };
 
   useEffect((): void => {
@@ -68,8 +89,7 @@ const MovieForm = () => {
 
   useEffect((): void => {
     setMovieApiUrl(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_genres=${genreChoice}`);
-    console.log('New Movie url: ', movieApiUrl);
-  }, [genreChoice, movieApiUrl])
+  }, [genreChoice])
 
   return (
     <>
@@ -98,8 +118,8 @@ const MovieForm = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Button onClick={handleGetMoviesClick}>Find me a movie!</Button>
-          { movieList.length > 0 &&
+          <Button onClick={getMovies}>Find me a movie!</Button>
+          {movieList.length > 0 ?
             <Grid 
               container 
               spacing={2}
@@ -111,8 +131,8 @@ const MovieForm = () => {
                   Movies
                 </Typography>
                 <List>
-                  {movieList.map((movie) =>
-                    <ListItem>
+                  {movieList.map((movie: any) =>
+                    <ListItem key={movie['id']}>
                       <ListItemAvatar>
                         <Avatar src={MOVIE_POSTER_API_URL + movie['backdrop_path']} />
                       </ListItemAvatar>
@@ -123,8 +143,32 @@ const MovieForm = () => {
                     </ListItem>,
                   )}
                 </List>
+                <Box>
+                <Pagination
+                  count={numberOfPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                  classes={{ ul: classes.paginator }}
+                />
+                </Box>
               </Grid>
-            </Grid>
+            </Grid> :
+            <>
+            <Skeleton height={50} animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            <Skeleton animation="wave" />
+            </>
           }
         </Card>
       </Box>
