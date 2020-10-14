@@ -17,6 +17,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Pagination from '@material-ui/lab/Pagination';
 import Skeleton from '@material-ui/lab/Skeleton';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import Carousel from 'react-material-ui-carousel'
 import axios from 'axios';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -38,8 +39,18 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
+const Item = (props: any) => {
+    return (
+        <Paper>
+            <h2>{props.movie.title}</h2>
+            <p>{props.movie.overview}</p>
+            <img alt={'poster for' + props.movie.title} src={"https://image.tmdb.org/t/p/w500/" + props.movie.backdrop_path} />
+        </Paper>
+    )
+}
+
 const MovieForm = () => {
-  
+  const carouselBool = false;
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
   const classes = useStyles();
   const [genreChoice, setGenreChoice] = useState<number | undefined>(undefined);
@@ -49,6 +60,7 @@ const MovieForm = () => {
   const itemsPerPage = 10;
   const [page, setPage] = useState(1);
   const [numberOfPages, setNumberOfPages] = useState(Math.ceil(movieList.length / itemsPerPage));
+
 
   const getGenres = async (): Promise<void> => {
     await axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US`)
@@ -119,7 +131,7 @@ const MovieForm = () => {
             </FormControl>
           </Grid>
           <Button onClick={getMovies}>Find me a movie!</Button>
-          {movieList.length > 0 ?
+          {carouselBool ?
             <Grid 
               container 
               spacing={2}
@@ -157,18 +169,36 @@ const MovieForm = () => {
                 </Box>
               </Grid>
             </Grid> :
-            <>
-            <Skeleton height={50} animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            <Skeleton animation="wave" />
-            </>
+            <Box p={10}>
+              { carouselBool ?
+              <>
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              <Skeleton height={50} animation="wave" />
+              </> :
+              <Carousel
+                autoPlay={false}
+                next={ (next: any, active: any) => console.log(`we left ${active}, and are now at ${next}`) } 
+                prev={ (prev: any, active: any) => console.log(`we left ${active}, and are now at ${prev}`) }
+              >
+                {
+                  movieList.map( (movie, i) => <Item key={i} movie={movie} /> )
+                }
+              </Carousel>
+              }
+            </Box>
           }
         </Card>
       </Box>
