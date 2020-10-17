@@ -18,6 +18,10 @@ import Pagination from '@material-ui/lab/Pagination';
 import Skeleton from '@material-ui/lab/Skeleton';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Carousel from 'react-material-ui-carousel'
+import ViewCarouselIcon from '@material-ui/icons/ViewCarousel';
+import ViewListIcon from '@material-ui/icons/ViewList';
+import ToggleButton from '@material-ui/lab/ToggleButton';
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import axios from 'axios';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -60,7 +64,11 @@ const MovieForm = () => {
   const itemsPerPage = 10;
   const [page, setPage] = useState(1);
   const [numberOfPages, setNumberOfPages] = useState(Math.ceil(movieList.length / itemsPerPage));
+  const [alignment, setAlignment] = React.useState<string | null>('carousel');
 
+  const handleAlignment = (_event: React.MouseEvent<HTMLElement>, newAlignment: string | null) => {
+    setAlignment(newAlignment);
+  };
 
   const getGenres = async (): Promise<void> => {
     await axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US`)
@@ -130,8 +138,21 @@ const MovieForm = () => {
               </Select>
             </FormControl>
           </Grid>
+          <ToggleButtonGroup
+            value={alignment}
+            exclusive
+            onChange={handleAlignment}
+            aria-label="text alignment"
+          >
+            <ToggleButton value="carousel" aria-label="left aligned">
+              <ViewCarouselIcon />
+            </ToggleButton>
+            <ToggleButton value="list" aria-label="centered">
+              <ViewListIcon />
+            </ToggleButton>
+          </ToggleButtonGroup>
           <Button onClick={getMovies}>Find me a movie!</Button>
-          {carouselBool ?
+          {alignment === 'list' &&
             <Grid 
               container 
               spacing={2}
@@ -168,38 +189,21 @@ const MovieForm = () => {
                 />
                 </Box>
               </Grid>
-            </Grid> :
-            <Box p={10}>
-              { carouselBool ?
-              <>
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              <Skeleton height={50} animation="wave" />
-              </> :
-              <Carousel
-                autoPlay={false}
-                next={ (next: any, active: any) => console.log(`we left ${active}, and are now at ${next}`) } 
-                prev={ (prev: any, active: any) => console.log(`we left ${active}, and are now at ${prev}`) }
-              >
-                {
-                  movieList.map( (movie, i) => <Item key={i} movie={movie} /> )
-                }
-              </Carousel>
-              }
-            </Box>
+            </Grid> 
           }
+          <Box p={10}>
+            { alignment === 'carousel' &&
+            <Carousel
+              autoPlay={false}
+              next={ (next: any, active: any) => console.log(`we left ${active}, and are now at ${next}`) } 
+              prev={ (prev: any, active: any) => console.log(`we left ${active}, and are now at ${prev}`) }
+            >
+              {
+                movieList.map( (movie, i) => <Item key={i} movie={movie} /> )
+              }
+            </Carousel>
+            }
+          </Box>
         </Card>
       </Box>
     </Paper>
