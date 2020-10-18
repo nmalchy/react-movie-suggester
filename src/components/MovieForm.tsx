@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
-import Card from '@material-ui/core/Card';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import Typography from '@material-ui/core/Typography';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import Avatar from '@material-ui/core/Avatar';
+import LocalMoviesIcon from '@material-ui/icons/LocalMovies';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
 import Pagination from '@material-ui/lab/Pagination';
-import Skeleton from '@material-ui/lab/Skeleton';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Carousel from 'react-material-ui-carousel'
 import ViewCarouselIcon from '@material-ui/icons/ViewCarousel';
@@ -23,6 +21,7 @@ import ViewListIcon from '@material-ui/icons/ViewList';
 import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import axios from 'axios';
+import Avatar from '@material-ui/core/Avatar';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -44,17 +43,29 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 const Item = (props: any) => {
-    return (
-        <Paper>
-            <h2>{props.movie.title}</h2>
-            <p>{props.movie.overview}</p>
-            <img alt={'poster for' + props.movie.title} src={"https://image.tmdb.org/t/p/w500/" + props.movie.backdrop_path} />
-        </Paper>
-    )
+  
+  const [openMovieDbData, setOpenMovieDbData] = useState([]);
+
+  useEffect((): any => {
+    axios.get(`http://www.omdbapi.com/?t=${props.movie.title}&y=${props.movie.release_date && props.movie.release_date.substr(0, 4)}&apikey=${process.env.REACT_APP_OPEN_MOVIE_API_KEY}`)
+    .then(response => setOpenMovieDbData(response.data.Ratings))
+    .catch((error) => console.log('Open Movie DB HTTP GET Request Error response:', error))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <Paper style={{padding: "30px"}} elevation={50}>
+      <h2>{props.movie.title}</h2>
+      <p>{props.movie.overview}</p>
+      <div>Release Date: {props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'} | Ratings: {(openMovieDbData.length || !undefined) > 0 ? openMovieDbData.map((rating: any) => <div>{rating.Source}: {rating.Value}</div>) : 'N/A'}</div>
+      <img alt={'Poster for ' + props.movie.title} src={"https://image.tmdb.org/t/p/w500/" + props.movie.backdrop_path} />
+      <br />
+    </Paper>
+  )
 }
 
 const MovieForm = () => {
-  const carouselBool = false;
+
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
   const classes = useStyles();
   const [genreChoice, setGenreChoice] = useState<number | undefined>(undefined);
@@ -113,10 +124,7 @@ const MovieForm = () => {
 
   return (
     <>
-    <h1>Movie Suggester</h1>
-    <Paper elevation={3}>
-      <Box p={10}>
-        <Card>
+      <h1>Movie Suggester</h1>
           <Grid
             container
             direction="row"
@@ -137,22 +145,22 @@ const MovieForm = () => {
                 })}
               </Select>
             </FormControl>
+            <ToggleButtonGroup
+              value={alignment}
+              exclusive
+              onChange={handleAlignment}
+              aria-label="text alignment"
+            >
+              <ToggleButton value="carousel" aria-label="left aligned">
+                <ViewCarouselIcon />
+              </ToggleButton>
+              <ToggleButton value="list" aria-label="centered">
+                <ViewListIcon />
+              </ToggleButton>
+            </ToggleButtonGroup>
           </Grid>
-          <ToggleButtonGroup
-            value={alignment}
-            exclusive
-            onChange={handleAlignment}
-            aria-label="text alignment"
-          >
-            <ToggleButton value="carousel" aria-label="left aligned">
-              <ViewCarouselIcon />
-            </ToggleButton>
-            <ToggleButton value="list" aria-label="centered">
-              <ViewListIcon />
-            </ToggleButton>
-          </ToggleButtonGroup>
-          <Button onClick={getMovies}>Find me a movie!</Button>
-          {alignment === 'list' &&
+          <Button variant="contained" color="primary" onClick={getMovies}>Show me the movies!</Button>
+          {(alignment === 'list' && movieList.length > 0) &&
             <Grid 
               container 
               spacing={2}
@@ -160,18 +168,32 @@ const MovieForm = () => {
               alignItems="center"
             >
               <Grid item xs={12} md={6}>
-                <Typography variant="h6" className={classes.title}>
-                  Movies
-                </Typography>
+                <Box>
+                  <Pagination
+                    count={numberOfPages}
+                    page={page}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size="large"
+                    showFirstButton
+                    showLastButton
+                    classes={{ ul: classes.paginator }}
+                  />
+                </Box>
                 <List>
                   {movieList.map((movie: any) =>
-                    <ListItem key={movie['id']}>
-                      <ListItemAvatar>
-                        <Avatar src={MOVIE_POSTER_API_URL + movie['backdrop_path']} />
-                      </ListItemAvatar>
+                    <ListItem key={movie.id}>
+                      {movie.backdrop_path ?
+                        <ListItemAvatar>
+                          <Avatar src={MOVIE_POSTER_API_URL + movie.backdrop_path} />
+                        </ListItemAvatar> :
+                        <ListItemIcon>
+                          <LocalMoviesIcon />
+                        </ListItemIcon>
+                      }
                       <ListItemText
-                        primary={movie['title']}
-                        secondary={movie['overview']}
+                        primary={movie.title}
+                        secondary={`${movie.overview} Released in ${movie.release_date ? movie.release_date.substr(0, 4) : 'N/A'}`}
                       />
                     </ListItem>,
                   )}
@@ -191,22 +213,22 @@ const MovieForm = () => {
               </Grid>
             </Grid> 
           }
-          <Box p={10}>
-            { alignment === 'carousel' &&
-            <Carousel
-              autoPlay={false}
-              next={ (next: any, active: any) => console.log(`we left ${active}, and are now at ${next}`) } 
-              prev={ (prev: any, active: any) => console.log(`we left ${active}, and are now at ${prev}`) }
-            >
-              {
-                movieList.map( (movie, i) => <Item key={i} movie={movie} /> )
-              }
-            </Carousel>
+          <Box p={5}>
+            {(alignment === 'carousel' && movieList.length > 0) &&
+              <Carousel
+                navButtonsAlwaysVisible={true}
+                autoPlay={false}
+                timeout={500}
+                animation={'fade'}
+                next={ (next: any, active: any) => console.log(`we left ${active}, and are now at ${next}`) } 
+                prev={ (prev: any, active: any) => console.log(`we left ${active}, and are now at ${prev}`) }
+              >
+                {
+                  movieList.map( (movie, i) => <Item key={i} movie={movie} /> )
+                }
+              </Carousel>
             }
           </Box>
-        </Card>
-      </Box>
-    </Paper>
     </>
   )
 }
