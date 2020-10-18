@@ -44,20 +44,27 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const Item = (props: any) => {
   
-  const [openMovieDbData, setOpenMovieDbData] = useState([]);
+  const [openMovieDbData, setOpenMovieDbData] = useState<Array<any>>([]);
+  const [openMovieDbRatings, setOpenMovieDbRatings] = useState([]);
 
   useEffect((): any => {
     axios.get(`http://www.omdbapi.com/?t=${props.movie.title}&y=${props.movie.release_date && props.movie.release_date.substr(0, 4)}&apikey=${process.env.REACT_APP_OPEN_MOVIE_API_KEY}`)
-    .then(response => setOpenMovieDbData(response.data.Ratings))
+    .then(response => {
+      setOpenMovieDbData(response.data);
+      setOpenMovieDbRatings(response.data.Ratings);
+      console.log("The data", openMovieDbData);
+    })
     .catch((error) => console.log('Open Movie DB HTTP GET Request Error response:', error))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
     <Paper style={{padding: "30px"}} elevation={50}>
       <h2>{props.movie.title}</h2>
       <p>{props.movie.overview}</p>
-      <div>Release Date: {props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'} | Ratings: {(openMovieDbData.length || !undefined) > 0 ? openMovieDbData.map((rating: any) => <div>{rating.Source}: {rating.Value}</div>) : 'N/A'}</div>
+      <div>Release Date: {props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'} </div>
+      <div>{openMovieDbRatings.length > 0 && openMovieDbRatings.map((rating: any) => <div>{rating.Source}: {rating.Value}</div>)}</div>
+      <div>Runtime: {openMovieDbData['Runtime'] ? openMovieDbData['Runtime'] : 'N/A'}</div>
+      <div>Rated: {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}</div>
       <img alt={'Poster for ' + props.movie.title} src={"https://image.tmdb.org/t/p/w500/" + props.movie.backdrop_path} />
       <br />
     </Paper>
