@@ -52,7 +52,6 @@ const Item = (props: any) => {
     .then(response => {
       setOpenMovieDbData(response.data);
       setOpenMovieDbRatings(response.data.Ratings);
-      console.log("The data", openMovieDbData);
     })
     .catch((error) => console.log('Open Movie DB HTTP GET Request Error response:', error))
   }, [])
@@ -218,7 +217,7 @@ const MovieForm = () => {
                 />
                 </Box>
               </Grid>
-            </Grid> 
+            </Grid>
           }
           <Box p={5}>
             {(alignment === 'carousel' && movieList.length > 0) &&
@@ -227,7 +226,7 @@ const MovieForm = () => {
                 autoPlay={false}
                 timeout={500}
                 animation={'fade'}
-                next={ (next: any, active: any) => console.log(`we left ${active}, and are now at ${next}`) } 
+                next={ () => console.log(`Next triggered`) }
                 prev={ (prev: any, active: any) => console.log(`we left ${active}, and are now at ${prev}`) }
               >
                 {
