@@ -81,10 +81,11 @@ const MovieForm = () => {
   const itemsPerPage = 10;
   const [page, setPage] = useState(1);
   const [numberOfPages, setNumberOfPages] = useState(Math.ceil(movieList.length / itemsPerPage));
-  const [alignment, setAlignment] = React.useState<string | null>('carousel');
+  const [view, setView] = React.useState<string | null>('carousel');
+  const [carouselEdgeCaseBoolean, setCarouselEdgeCaseBoolean] = useState(true)
 
-  const handleAlignment = (_event: React.MouseEvent<HTMLElement>, newAlignment: string | null) => {
-    setAlignment(newAlignment);
+  const handleView = (_event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+    setView(newView);
   };
 
   const getGenres = async (): Promise<void> => {
@@ -152,10 +153,10 @@ const MovieForm = () => {
               </Select>
             </FormControl>
             <ToggleButtonGroup
-              value={alignment}
+              value={view}
               exclusive
-              onChange={handleAlignment}
-              aria-label="text alignment"
+              onChange={handleView}
+              aria-label="text view"
             >
               <ToggleButton value="carousel" aria-label="left aligned">
                 <ViewCarouselIcon />
@@ -166,7 +167,7 @@ const MovieForm = () => {
             </ToggleButtonGroup>
           </Grid>
           <Button variant="contained" color="primary" onClick={getMovies}>Show me the movies!</Button>
-          {(alignment === 'list' && movieList.length > 0) &&
+          {(view === 'list' && movieList.length > 0) &&
             <Grid 
               container 
               spacing={2}
@@ -220,14 +221,19 @@ const MovieForm = () => {
             </Grid>
           }
           <Box p={5}>
-            {(alignment === 'carousel' && movieList.length > 0) &&
+            {(view === 'carousel' && movieList.length > 0) &&
               <Carousel
                 navButtonsAlwaysVisible={true}
                 autoPlay={false}
                 timeout={500}
                 animation={'fade'}
-                next={ () => console.log(`Next triggered`) }
-                prev={ (prev: any, active: any) => console.log(`we left ${active}, and are now at ${prev}`) }
+                next={ (next: any, active: any) => {
+                  (next === 0 && carouselEdgeCaseBoolean) && handlePageChange('click', page + 1);
+                }}
+                prev={ (prev: any, active: any) => {
+                  (prev === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
+                  (prev === movieList.length - 1 && page !== 1) && handlePageChange('click', page - 1);
+                }}
               >
                 {
                   movieList.map( (movie, i) => <Item key={i} movie={movie} /> )
