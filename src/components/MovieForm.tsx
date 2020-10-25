@@ -42,8 +42,8 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-const Item = (props: any) => {
-  
+const CarouselItem = (props: any) => {
+
   const [openMovieDbData, setOpenMovieDbData] = useState<Array<any>>([]);
   const [openMovieDbRatings, setOpenMovieDbRatings] = useState([]);
 
@@ -70,15 +70,50 @@ const Item = (props: any) => {
   )
 }
 
-const MovieForm = () => {
+const ListingItem = (props: any) => {
 
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
+  const [openMovieDbData, setOpenMovieDbData] = useState<Array<any>>([]);
+  const [openMovieDbRatings, setOpenMovieDbRatings] = useState([]);
+
+  useEffect((): any => {
+    axios.get(`http://www.omdbapi.com/?t=${props.movie.title}&y=${props.movie.release_date && props.movie.release_date.substr(0, 4)}&apikey=${process.env.REACT_APP_OPEN_MOVIE_API_KEY}`)
+    .then(response => {
+      setOpenMovieDbData(response.data);
+      setOpenMovieDbRatings(response.data.Ratings);
+    })
+    .catch((error) => console.log('Open Movie DB HTTP GET Request Error response:', error))
+  }, [])
+
+  return (
+    <ListItem key={props.movie.id}>
+      {props.movie.backdrop_path ?
+        <ListItemAvatar>
+          <Avatar src={MOVIE_POSTER_API_URL + props.movie.backdrop_path} />
+        </ListItemAvatar> :
+        <ListItemIcon>
+          <Avatar><LocalMoviesIcon /></Avatar>
+        </ListItemIcon>
+      }
+      <ListItemText
+        primary={props.movie.title}
+        secondary={
+          `${props.movie.overview} Released in ${props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'}
+          ${openMovieDbRatings ? openMovieDbRatings.map((rating: any) => <div>{rating.Source}: {rating.Value}</div>) : 'No Reviews'}`
+        }
+      />
+    </ListItem>
+  )
+}
+
+const MovieForm = () => {
+
+  const itemsPerPage = 10;
   const classes = useStyles();
   const [genreChoice, setGenreChoice] = useState<number | undefined>(undefined);
   const [genreList, setGenreList] = useState<Array<any>>([]);
   const [movieApiUrl, setMovieApiUrl] = useState<string>('');
   const [movieList, setMovieList] = useState<Array<string>>([]);
-  const itemsPerPage = 10;
   const [page, setPage] = useState(1);
   const [numberOfPages, setNumberOfPages] = useState(Math.ceil(movieList.length / itemsPerPage));
   const [view, setView] = React.useState<string | null>('carousel');
@@ -174,7 +209,7 @@ const MovieForm = () => {
               justify="center"
               alignItems="center"
             >
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={8}>
                 <Box>
                   <Pagination
                     count={numberOfPages}
@@ -188,22 +223,9 @@ const MovieForm = () => {
                   />
                 </Box>
                 <List>
-                  {movieList.map((movie: any) =>
-                    <ListItem key={movie.id}>
-                      {movie.backdrop_path ?
-                        <ListItemAvatar>
-                          <Avatar src={MOVIE_POSTER_API_URL + movie.backdrop_path} />
-                        </ListItemAvatar> :
-                        <ListItemIcon>
-                          <LocalMoviesIcon />
-                        </ListItemIcon>
-                      }
-                      <ListItemText
-                        primary={movie.title}
-                        secondary={`${movie.overview} Released in ${movie.release_date ? movie.release_date.substr(0, 4) : 'N/A'}`}
-                      />
-                    </ListItem>,
-                  )}
+                  {
+                    movieList.map((movie: any) => <ListingItem movie={movie} />)
+                  }
                 </List>
                 <Box>
                 <Pagination
@@ -227,17 +249,18 @@ const MovieForm = () => {
                 autoPlay={false}
                 timeout={500}
                 animation={'fade'}
-                next={ (next: any, active: any) => {
+                next={(next: any, active: any) => {
+                  (next === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
                   (next === 0 && carouselEdgeCaseBoolean) && handlePageChange('click', page + 1);
                 }}
-                prev={ (prev: any, active: any) => {
+                prev={(prev: any, active: any) => {
                   (prev === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
                   (prev === movieList.length - 1 && page !== 1) && handlePageChange('click', page - 1);
                 }}
               >
-                {
-                  movieList.map( (movie, i) => <Item key={i} movie={movie} /> )
-                }
+              {
+                movieList.map((movie, i) => <CarouselItem key={i} movie={movie} />)
+              }
               </Carousel>
             }
           </Box>
