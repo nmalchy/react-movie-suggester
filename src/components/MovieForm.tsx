@@ -74,13 +74,13 @@ const ListingItem = (props: any) => {
 
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
   const [openMovieDbData, setOpenMovieDbData] = useState<Array<any>>([]);
-  const [openMovieDbRatings, setOpenMovieDbRatings] = useState([]);
+  //const [openMovieDbRatings, setOpenMovieDbRatings] = useState([]);
 
   useEffect((): any => {
     axios.get(`http://www.omdbapi.com/?t=${props.movie.title}&y=${props.movie.release_date && props.movie.release_date.substr(0, 4)}&apikey=${process.env.REACT_APP_OPEN_MOVIE_API_KEY}`)
     .then(response => {
       setOpenMovieDbData(response.data);
-      setOpenMovieDbRatings(response.data.Ratings);
+      //setOpenMovieDbRatings(response.data.Ratings);
     })
     .catch((error) => console.log('Open Movie DB HTTP GET Request Error response:', error))
   }, [])
@@ -92,15 +92,18 @@ const ListingItem = (props: any) => {
           <Avatar src={MOVIE_POSTER_API_URL + props.movie.backdrop_path} />
         </ListItemAvatar> :
         <ListItemIcon>
-          <Avatar><LocalMoviesIcon /></Avatar>
+          <Avatar>
+            <LocalMoviesIcon />
+          </Avatar>
         </ListItemIcon>
       }
       <ListItemText
         primary={props.movie.title}
-        secondary={
-          `${props.movie.overview} Released in ${props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'}
-          ${openMovieDbRatings ? openMovieDbRatings.map((rating: any) => <div>{rating.Source}: {rating.Value}</div>) : 'No Reviews'}`
-        }
+        secondary={`${props.movie.overview} Released in ${props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'}
+                    ${openMovieDbData['Ratings'] ? openMovieDbData['Ratings'].map((rating: any) => <div>{JSON.stringify(rating.Source)}: {JSON.stringify(rating.Value)}</div>) : 'No Reviews'}
+                    Rated: ${openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}
+                    `
+                  }
       />
     </ListItem>
   )
@@ -247,13 +250,13 @@ const MovieForm = () => {
               <Carousel
                 navButtonsAlwaysVisible={true}
                 autoPlay={false}
-                timeout={500}
+                timeout={0}
                 animation={'fade'}
-                next={(next: any, active: any) => {
+                next={(next: any) => {
                   (next === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
                   (next === 0 && carouselEdgeCaseBoolean) && handlePageChange('click', page + 1);
                 }}
-                prev={(prev: any, active: any) => {
+                prev={(prev: any) => {
                   (prev === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
                   (prev === movieList.length - 1 && page !== 1) && handlePageChange('click', page - 1);
                 }}
