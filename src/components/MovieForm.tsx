@@ -99,10 +99,22 @@ const ListingItem = (props: any) => {
       }
       <ListItemText
         primary={props.movie.title}
-        secondary={`${props.movie.overview} Released in ${props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'}
-                    ${openMovieDbData['Ratings'] ? openMovieDbData['Ratings'].map((rating: any) => <div>{JSON.stringify(rating.Source)}: {JSON.stringify(rating.Value)}</div>) : 'No Reviews'}
-                    Rated: ${openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}
-                    `
+        secondary={
+          <>
+          {props.movie.overview} Released in{' '}
+          {props.movie.release_date
+              ? props.movie.release_date.substr(0, 4)
+              : 'N/A'}{' '}
+          {openMovieDbData['Ratings']
+              ? openMovieDbData['Ratings'].map((rating: any) => (
+                      <div>
+                          {rating.Source}: {rating.Value}
+                      </div>
+                  ))
+              : 'No Reviews'}
+          Rated:{' '}
+          {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}
+          </>
                   }
       />
     </ListItem>
