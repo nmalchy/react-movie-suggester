@@ -100,21 +100,21 @@ const ListingItem = (props: any) => {
       <ListItemText
         primary={props.movie.title}
         secondary={
-          <>
-          {props.movie.overview} Released in{' '}
-          {props.movie.release_date
-              ? props.movie.release_date.substr(0, 4)
-              : 'N/A'}{' '}
-          {openMovieDbData['Ratings']
-              ? openMovieDbData['Ratings'].map((rating: any) => (
-                      <div>
-                          {rating.Source}: {rating.Value}
-                      </div>
-                  ))
-              : 'No Reviews'}
-          Rated:{' '}
-          {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}
-          </>
+                    <>
+                    {props.movie.overview} Released in{' '}
+                    {props.movie.release_date
+                        ? props.movie.release_date.substr(0, 4)
+                        : 'N/A'}{' '}
+                    {openMovieDbData['Ratings']
+                        ? openMovieDbData['Ratings'].map((rating: any) => (
+                                <div>
+                                    {rating.Source}: {rating.Value}
+                                </div>
+                            ))
+                        : 'No Reviews'}
+                    Rated:{' '}
+                    {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}
+                    </>
                   }
       />
     </ListItem>
@@ -133,7 +133,40 @@ const MovieForm = () => {
   const [numberOfPages, setNumberOfPages] = useState(Math.ceil(movieList.length / itemsPerPage));
   const [view, setView] = React.useState<string | null>('carousel');
   const [carouselEdgeCaseBoolean, setCarouselEdgeCaseBoolean] = useState(true)
+  const right = useKeyPress('r');
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  // Hook
+  function useKeyPress(targetKey: string) {
+    // State for keeping track of whether key is pressed
+    const [keyPressed, setKeyPressed] = useState(false);
 
+    // If pressed key is our target key then set to true
+    function downHandler(key: any ) {
+      if (key === targetKey) {
+        setKeyPressed(true);
+      }
+    }
+
+    // If released key is our target key then set to false
+    const upHandler = (key: any) => {
+      if (key === targetKey) {
+        setKeyPressed(false);
+      }
+    };
+
+    // Add event listeners
+    useEffect(() => {
+      window.addEventListener('keydown', downHandler);
+      window.addEventListener('keyup', upHandler);
+      // Remove event listeners on cleanup
+      return () => {
+        window.removeEventListener('keydown', downHandler);
+        window.removeEventListener('keyup', upHandler);
+      };
+    }, []); // Empty array ensures that effect is only run on mount and unmount
+
+    return keyPressed;
+  }
   const handleView = (_event: React.MouseEvent<HTMLElement>, newView: string | null) => {
     setView(newView);
   };
@@ -263,6 +296,7 @@ const MovieForm = () => {
                 navButtonsAlwaysVisible={true}
                 autoPlay={false}
                 timeout={0}
+                index={carouselIndex}
                 animation={'fade'}
                 next={(next: any) => {
                   (next === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
