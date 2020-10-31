@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
@@ -38,7 +38,19 @@ const useStyles = makeStyles((theme: Theme) =>
     paginator: {
       justifyContent: "center",
       padding: "10px"
-    }
+    },
+    scrollBar: {
+      '&::-webkit-scrollbar': {
+        width: '0.4em'
+      },
+      '&::-webkit-scrollbar-track': {
+        '-webkit-box-shadow': 'inset 0 0 6px rgba(0,0,0,0.00)'
+      },
+      '&::-webkit-scrollbar-thumb': {
+        backgroundColor: 'rgba(0,0,0,.1)',
+        outline: '1px solid slategrey'
+      }
+    },
   }),
 );
 
@@ -60,12 +72,13 @@ const CarouselItem = (props: any) => {
     <Paper style={{padding: "30px"}} elevation={50}>
       <h2>{props.movie.title}</h2>
       <p>{props.movie.overview}</p>
-      <div>Release Date: {props.movie.release_date ? props.movie.release_date.substr(0, 4) : 'N/A'} </div>
+      <div>Release Date: {props.movie.release_date ? props.movie.release_date : 'N/A'} </div>
       <div>{openMovieDbRatings ? openMovieDbRatings.map((rating: any) => <div>{rating.Source}: {rating.Value}</div>) : 'No Reviews'}</div>
       <div>Runtime: {openMovieDbData['Runtime'] ? openMovieDbData['Runtime'] : 'N/A'}</div>
+      <div>{openMovieDbData['Director'] ? `Directed by: ${openMovieDbData['Director']}` : 'Director not listed. '}</div>
+      <div>{openMovieDbData['Actors'] ? `Actors: ${openMovieDbData['Actors']}` : 'Actors not listed. '}</div>
       <div>Rated: {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}</div>
       <img alt={'Poster for ' + props.movie.title} src={"https://image.tmdb.org/t/p/w500/" + props.movie.backdrop_path} />
-      <br />
     </Paper>
   )
 }
@@ -87,7 +100,8 @@ const ListingItem = (props: any) => {
 
   return (
     <ListItem key={props.movie.id}>
-      {props.movie.backdrop_path ?
+      {
+      props.movie.backdrop_path ?
         <ListItemAvatar>
           <Avatar src={MOVIE_POSTER_API_URL + props.movie.backdrop_path} />
         </ListItemAvatar> :
@@ -101,19 +115,30 @@ const ListingItem = (props: any) => {
         primary={props.movie.title}
         secondary={
                     <>
-                    {props.movie.overview} Released in{' '}
-                    {props.movie.release_date
-                        ? props.movie.release_date.substr(0, 4)
-                        : 'N/A'}{' '}
-                    {openMovieDbData['Ratings']
-                        ? openMovieDbData['Ratings'].map((rating: any) => (
-                                <div>
-                                    {rating.Source}: {rating.Value}
-                                </div>
-                            ))
-                        : 'No Reviews'}
-                    Rated:{' '}
-                    {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}
+                        {props.movie.overview}
+                      <div>
+                        Release Date:{' '}
+                        {props.movie.release_date
+                            ? props.movie.release_date
+                            : 'N/A'}{' '}
+                      </div>
+                      {openMovieDbData['Ratings']
+                          ? openMovieDbData['Ratings'].map((rating: any) => (
+                                  <div>
+                                      {rating.Source}: {rating.Value}
+                                  </div>
+                              ))
+                          : 'No Reviews '}
+                      <div>
+                        {openMovieDbData['Director'] ? `Directed by: ${openMovieDbData['Director']}` : 'Director not listed. '}
+                      </div>
+                      <div>
+                        {openMovieDbData['Actors'] ? `Actors: ${openMovieDbData['Actors']}` : 'Actors not listed. '}
+                      </div>
+                      <div>
+                        Rated:{' '}
+                        {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}
+                      </div>
                     </>
                   }
       />
@@ -132,41 +157,9 @@ const MovieForm = () => {
   const [page, setPage] = useState(1);
   const [numberOfPages, setNumberOfPages] = useState(Math.ceil(movieList.length / itemsPerPage));
   const [view, setView] = React.useState<string | null>('carousel');
-  const [carouselEdgeCaseBoolean, setCarouselEdgeCaseBoolean] = useState(true)
-  const right = useKeyPress('r');
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  // Hook
-  function useKeyPress(targetKey: string) {
-    // State for keeping track of whether key is pressed
-    const [keyPressed, setKeyPressed] = useState(false);
+  const [carouselEdgeCaseBoolean, setCarouselEdgeCaseBoolean] = useState(true);
+  const [activeChild, setActiveChild] = useState(0);
 
-    // If pressed key is our target key then set to true
-    function downHandler(key: any ) {
-      if (key === targetKey) {
-        setKeyPressed(true);
-      }
-    }
-
-    // If released key is our target key then set to false
-    const upHandler = (key: any) => {
-      if (key === targetKey) {
-        setKeyPressed(false);
-      }
-    };
-
-    // Add event listeners
-    useEffect(() => {
-      window.addEventListener('keydown', downHandler);
-      window.addEventListener('keyup', upHandler);
-      // Remove event listeners on cleanup
-      return () => {
-        window.removeEventListener('keydown', downHandler);
-        window.removeEventListener('keyup', upHandler);
-      };
-    }, []); // Empty array ensures that effect is only run on mount and unmount
-
-    return keyPressed;
-  }
   const handleView = (_event: React.MouseEvent<HTMLElement>, newView: string | null) => {
     setView(newView);
   };
@@ -212,6 +205,29 @@ const MovieForm = () => {
     setMovieApiUrl(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&with_genres=${genreChoice}`);
   }, [genreChoice])
 
+  // The Keypress Event Handler
+  const changeChild = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        // If supposed previous child is < 0 set it to last child
+        setActiveChild((a) => (a - 1 < 0 ? movieList.length - 1 : a - 1));
+      } else if (e.key === "ArrowRight") {
+        // If supposed next child is > length -1 set it to first child
+        setActiveChild((a) => (a + 1 > movieList.length - 1 ? 0 : a + 1));
+      }
+    },
+    [movieList]
+  );
+
+  // Set and cleanup the event listener for carousel
+  useEffect(() => {
+    document.addEventListener("keydown", changeChild);
+
+    return function cleanup() {
+      document.removeEventListener("keydown", changeChild);
+    };
+  });
+
   return (
     <>
       <h1>Movie Suggester</h1>
@@ -220,6 +236,7 @@ const MovieForm = () => {
             direction="row"
             justify="center"
             alignItems="center"
+            className={classes.scrollBar}
           >
             <FormControl variant="outlined" className={classes.formControl}>
               <InputLabel htmlFor="genre-select-label">Genres</InputLabel>
@@ -294,9 +311,9 @@ const MovieForm = () => {
             {(view === 'carousel' && movieList.length > 0) &&
               <Carousel
                 navButtonsAlwaysVisible={true}
+                index={activeChild}
                 autoPlay={false}
                 timeout={0}
-                index={carouselIndex}
                 animation={'fade'}
                 next={(next: any) => {
                   (next === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
