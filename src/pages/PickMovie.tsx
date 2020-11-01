@@ -1,7 +1,7 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Container } from '@material-ui/core';
-import MovieForm from '../components/MovieForm';
+import MovieList from '../components/MovieList';
 
 const useStyles = makeStyles({
   root: {
@@ -15,7 +15,7 @@ const classes = useStyles();
 
 return (
     <Container className={classes.root}>
-      <MovieForm />
+      <MovieList />
     </Container>
   );
 }

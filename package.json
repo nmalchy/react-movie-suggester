@@ -17,11 +17,8 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-material-ui-carousel": "^2.1.1",
-    "react-redux": "^7.2.2",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
-    "redux": "^4.0.5",
-    "redux-thunk": "^2.3.0",
     "typescript": "^3.9.7"
   },
   "scripts": {
@@ -29,9 +26,6 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
   },
   "browserslist": {
     "production": [
@@ -48,7 +42,6 @@
   "devDependencies": {
     "@types/material-ui": "^0.21.8",
     "@types/react-redux": "^7.1.9",
-    "@types/react-router-dom": "^5.1.6",
-    "@types/redux": "^3.6.0"
+    "@types/react-router-dom": "^5.1.6"
   }
 }
