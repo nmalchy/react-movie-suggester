@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
@@ -157,6 +157,7 @@ const MovieList = () => {
   const [view, setView] = React.useState<string | null>('carousel');
   const [carouselEdgeCaseBoolean, setCarouselEdgeCaseBoolean] = useState<boolean>(false);
   const [activeChild, setActiveChild] = useState<number>(0);
+  const [showListing, setShowListing] = useState<boolean>(false);
 
   const handleView = (_event: React.MouseEvent<HTMLElement>, newView: string | null) => {
     setView(newView);
@@ -194,6 +195,7 @@ const MovieList = () => {
             setNumberOfPages(response.data.total_pages);
           })
           .catch((error) => console.log('getMovies HTTP GET Request Error response:', error));
+    setShowListing(true);
   };
 
   // Retrieve genres on mount
@@ -209,16 +211,12 @@ const MovieList = () => {
   // The keypress event handler
   const changeChild = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
-        console.log('activeChild:', activeChild);
-        console.log('carouselEdgeCaseBoolean:', carouselEdgeCaseBoolean);
         // If supposed previous child is < 0 set it to last child
         setActiveChild((a) => (a - 1 < 0 ? movieList.length - 1 : a - 1));
         // Conditonals for page change when using keyboard nav
         (activeChild === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
         (activeChild === 0 && page !== 1) && handlePageChange('click', page - 1);
       } else if (e.key === "ArrowRight") {
-        console.log('activeChild:', activeChild);
-        console.log('carouselEdgeCaseBoolean:', carouselEdgeCaseBoolean);
         // If supposed next child is > length -1 set it to first child
         setActiveChild((a) => (a + 1 > movieList.length - 1 ? 0 : a + 1));
         // Conditonals for page change when using keyboard nav
@@ -239,106 +237,111 @@ const MovieList = () => {
 
   return (
     <>
-      <h1>Movie Suggester</h1>
-          <Grid
-            container
-            direction="row"
-            justify="center"
-            alignItems="center"
-            className={classes.scrollBar}
-          >
-            <FormControl variant="outlined" className={classes.formControl}>
-              <InputLabel htmlFor="genre-select-label">Genres</InputLabel>
-              <Select
-                labelId="genre-select-label"
-                id="genre-select"
-                value={genreChoice}
-                onChange={handleGenreChange}
-                label="Genres"
-              >
-                {(genreList || []).map((genre: {name: string, id: number}) => {
-                  return <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>;
-                })}
-              </Select>
-            </FormControl>
-            <ToggleButtonGroup
-              value={view}
-              exclusive
-              onChange={handleView}
-              aria-label="text view"
-            >
-              <ToggleButton value="carousel" aria-label="left aligned">
-                <ViewCarouselIcon />
-              </ToggleButton>
-              <ToggleButton value="list" aria-label="centered">
-                <ViewListIcon />
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Grid>
-          <Button variant="contained" color="primary" onClick={getMovies}>Show me the movies!</Button>
-          {(view === 'list' && movieList.length > 0) &&
-            <Grid 
-              container 
-              spacing={2}
+      {showListing === false ?
+        <div>
+          <h1>Movie Suggester</h1>
+            <Grid
+              container
+              direction="row"
               justify="center"
               alignItems="center"
+              className={classes.scrollBar}
             >
-              <Grid item xs={12} md={8}>
-                <Box>
-                  <Pagination
-                    count={numberOfPages}
-                    page={page}
-                    onChange={handlePageChange}
-                    color="primary"
-                    size="large"
-                    showFirstButton
-                    showLastButton
-                    classes={{ ul: classes.paginator }}
-                  />
-                </Box>
-                <List>
-                  {
-                    movieList.map((movie: any, index: number) => <ListingItem key={index} movie={movie} />)
-                  }
-                </List>
-                <Box>
-                <Pagination
-                  count={numberOfPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                  showFirstButton
-                  showLastButton
-                  classes={{ ul: classes.paginator }}
-                />
-                </Box>
-              </Grid>
-            </Grid>
-          }
-          <Box p={5}>
-            {(view === 'carousel' && movieList.length > 0) &&
-              <Carousel
-                navButtonsAlwaysVisible={true}
-                index={activeChild}
-                autoPlay={false}
-                timeout={0}
-                animation={'fade'}
-                next={(next: any) => {
-                  (next === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
-                  (next === 0 && carouselEdgeCaseBoolean) && handlePageChange('click', page + 1);
-                }}
-                prev={(prev: any) => {
-                  (prev === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
-                  (prev === movieList.length - 1 && page !== 1) && handlePageChange('click', page - 1);
-                }}
+              <FormControl variant="outlined" className={classes.formControl}>
+                <InputLabel htmlFor="genre-select-label">Genres</InputLabel>
+                <Select
+                  labelId="genre-select-label"
+                  id="genre-select"
+                  value={genreChoice}
+                  onChange={handleGenreChange}
+                  label="Genres"
+                >
+                  {(genreList || []).map((genre: {name: string, id: number}) => {
+                    return <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>;
+                  })}
+                </Select>
+              </FormControl>
+              <ToggleButtonGroup
+                value={view}
+                exclusive
+                onChange={handleView}
+                aria-label="text view"
               >
+                <ToggleButton value="carousel" aria-label="left aligned">
+                  <ViewCarouselIcon />
+                </ToggleButton>
+                <ToggleButton value="list" aria-label="centered">
+                  <ViewListIcon />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Grid>
+            <Button variant="contained" color="primary" onClick={getMovies}>Show me the movies!</Button>
+        </div> :
+        <Button variant="contained" color="primary" onClick={(): void => setShowListing(false)}>Back</Button>
+      }
+      {(view === 'list' && movieList.length > 0 && showListing === true) &&
+        <Grid 
+          container 
+          spacing={2}
+          justify="center"
+          alignItems="center"
+        >
+          <Grid item xs={12} md={8}>
+            <Box>
+              <Pagination
+                count={numberOfPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+                classes={{ ul: classes.paginator }}
+              />
+            </Box>
+            <List>
               {
-                movieList.map((movie, i) => <CarouselItem key={i} movie={movie} />)
+                movieList.map((movie: any, index: number) => <ListingItem key={index} movie={movie} />)
               }
-              </Carousel>
-            }
-          </Box>
+            </List>
+            <Box>
+            <Pagination
+              count={numberOfPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+              showFirstButton
+              showLastButton
+              classes={{ ul: classes.paginator }}
+            />
+            </Box>
+          </Grid>
+        </Grid>
+      }
+      <Box p={5}>
+        {(view === 'carousel' && movieList.length > 0 && showListing === true) &&
+          <Carousel
+            navButtonsAlwaysVisible={true}
+            index={activeChild}
+            autoPlay={false}
+            timeout={300}
+            animation={'slide'}
+            next={(next: any) => {
+              (next === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
+              (next === 0 && carouselEdgeCaseBoolean) && handlePageChange('click', page + 1);
+            }}
+            prev={(prev: any) => {
+              (prev === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
+              (prev === movieList.length - 1 && page !== 1) && handlePageChange('click', page - 1);
+            }}
+          >
+          {
+            movieList.map((movie, i) => <CarouselItem key={i} movie={movie} />)
+          }
+          </Carousel>
+        }
+      </Box>
     </>
   );
 };
