@@ -23,6 +23,7 @@ import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import axios from 'axios';
 import Avatar from '@material-ui/core/Avatar';
 
+// Styles
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     formControl: {
@@ -54,6 +55,7 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
+// Component for listing movies in the carousel view
 const CarouselItem = (props: any) => {
 
   const [openMovieDbData, setOpenMovieDbData] = useState<Array<any>>([]);
@@ -83,6 +85,7 @@ const CarouselItem = (props: any) => {
   );
 };
 
+// Component for listing movies in the list view
 const ListingItem = (props: any) => {
 
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
@@ -159,10 +162,14 @@ const MovieList = () => {
   const [activeChild, setActiveChild] = useState<number>(0);
   const [showListing, setShowListing] = useState<boolean>(false);
 
+  // Change listing-view, reset page number to 1, and reset carousel active child
   const handleView = (_event: React.MouseEvent<HTMLElement>, newView: string | null) => {
     setView(newView);
+    setPage(1);
+    setActiveChild(0);
   };
 
+  // Get List of genres from TheMovieDB API
   const getGenres = async (): Promise<void> => {
     await axios.get(`https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US`)
           .then(response => setGenreList(response.data.genres))
@@ -182,10 +189,14 @@ const MovieList = () => {
           .catch((error) => console.log('handlePageChange HTTP GET Request Error response:', error));
   };
 
+  // Change Genre, reset page number to 1, and reset carousel active child
   const handleGenreChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     setGenreChoice(event.target.value as unknown as number);
+    setPage(1);
+    setActiveChild(0);
   };
 
+  // API GET Request to retrieve movies based on genre
   const getMovies = async (): Promise<void> => {
     await axios.get(movieApiUrl)
           .then(response => {
@@ -213,13 +224,13 @@ const MovieList = () => {
       if (e.key === "ArrowLeft") {
         // If supposed previous child is < 0 set it to last child
         setActiveChild((a) => (a - 1 < 0 ? movieList.length - 1 : a - 1));
-        // Conditonals for page change when using keyboard nav
+        // Conditonals for page change when using keyboard navigation
         (activeChild === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
         (activeChild === 0 && page !== 1) && handlePageChange('click', page - 1);
       } else if (e.key === "ArrowRight") {
         // If supposed next child is > length -1 set it to first child
         setActiveChild((a) => (a + 1 > movieList.length - 1 ? 0 : a + 1));
-        // Conditonals for page change when using keyboard nav
+        // Conditonals for page change when using keyboard navigation
         (activeChild === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
         (activeChild === movieList.length - 1 && carouselEdgeCaseBoolean) && handlePageChange('click', page + 1);
       }
