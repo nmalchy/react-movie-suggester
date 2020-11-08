@@ -23,6 +23,11 @@ import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import axios from 'axios';
 import Avatar from '@material-ui/core/Avatar';
 
+/* NOTE FOR HIRING MANAGER OR CODE REVIEWER */
+/* Because this project is for purposes of displaying my code, I have included mostly everything relevant in this one file so 
+that you don't have to bounce around files, if I were in a actual work environment, I would create separate files for 
+my ListingItem Component, CarouselItem Component, and interfaces, then import them in order to thin this file out */
+
 // Styles
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -55,17 +60,37 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
+interface IMovieDBData {
+  adult: boolean;
+  backdrop_path: string;
+  genre_ids: Array<number>;
+  id: number;
+  original_language: string;
+  original_title: string;
+  overview: string;
+  popularity: number;
+  poster_path: string;
+  release_date: string;
+  title: string;
+  video: boolean;
+  vote_average: number;
+  vote_count: number
+}
+
+interface IMovieListItemProps {
+  movie: IMovieDBData;
+}
+
 // Component for listing movies in the carousel view
-const CarouselItem = (props: any) => {
+const CarouselItem = (props: IMovieListItemProps) => {
 
-  const [openMovieDbData, setOpenMovieDbData] = useState<Array<any>>([]);
-  const [openMovieDbRatings, setOpenMovieDbRatings] = useState([]);
+  const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w500/";
+  const [openMovieDbData, setOpenMovieDbData] = useState<Array<string>>([]);
 
-  useEffect((): any => {
+  useEffect((): void => {
     axios.get(`http://www.omdbapi.com/?t=${props.movie.title}&y=${props.movie.release_date && props.movie.release_date.substr(0, 4)}&apikey=${process.env.REACT_APP_OPEN_MOVIE_API_KEY}`)
     .then(response => {
       setOpenMovieDbData(response.data);
-      setOpenMovieDbRatings(response.data.Ratings);
     })
     .catch((error) => console.log('OpenMovieDB HTTP GET Request Error response:', error));
   }, []);
@@ -75,23 +100,23 @@ const CarouselItem = (props: any) => {
       <h2>{props.movie.title}</h2>
       <p>{props.movie.overview}</p>
       <div>Release Date: {props.movie.release_date ? props.movie.release_date : 'N/A'} </div>
-      <div>{openMovieDbRatings ? openMovieDbRatings.map((rating: {Source: string, Value: string}, index: number) => <div key={index}>{rating.Source}: {rating.Value}</div>) : 'No Reviews'}</div>
+      <div>{openMovieDbData['Ratings'] ? openMovieDbData['Ratings'].map((rating: {Source: string, Value: string}, index: number) => (<div key={index}>{rating.Source}: {rating.Value}</div>)): 'No Reviews '}</div>
       <div>Runtime: {openMovieDbData['Runtime'] ? openMovieDbData['Runtime'] : 'N/A'}</div>
       <div>{openMovieDbData['Director'] ? `Directed by: ${openMovieDbData['Director']}` : 'Director not listed. '}</div>
       <div>{openMovieDbData['Actors'] ? `Actors: ${openMovieDbData['Actors']}` : 'Actors not listed. '}</div>
       <div>Rated: {openMovieDbData['Rated'] ? openMovieDbData['Rated'] : 'N/A'}</div>
-      <img alt={'Poster for ' + props.movie.title} src={"https://image.tmdb.org/t/p/w500/" + props.movie.backdrop_path} />
+      <img alt={'Poster for ' + props.movie.title} src={MOVIE_POSTER_API_URL + props.movie.backdrop_path} />
     </Paper>
   );
 };
 
 // Component for listing movies in the list view
-const ListingItem = (props: any) => {
+const ListingItem = (props: IMovieListItemProps) => {
 
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
-  const [openMovieDbData, setOpenMovieDbData] = useState<Array<any>>([]);
+  const [openMovieDbData, setOpenMovieDbData] = useState<Array<string>>([]);
 
-  useEffect((): any => {
+  useEffect((): void => {
     axios.get(`http://www.omdbapi.com/?t=${props.movie.title}&y=${props.movie.release_date && props.movie.release_date.substr(0, 4)}&apikey=${process.env.REACT_APP_OPEN_MOVIE_API_KEY}`)
     .then(response => {
       setOpenMovieDbData(response.data);
@@ -124,7 +149,7 @@ const ListingItem = (props: any) => {
                             : 'N/A'}{' '}
                       </div>
                       {openMovieDbData['Ratings']
-                          ? openMovieDbData['Ratings'].map((rating: any, index: number) => (
+                          ? openMovieDbData['Ratings'].map((rating: {Source: string, Value: string}, index: number) => (
                                   <div key={index}>
                                       {rating.Source}: {rating.Value}
                                   </div>
@@ -149,14 +174,14 @@ const ListingItem = (props: any) => {
 
 const MovieList = () => {
 
-  const itemsPerPage = 10;
+  //const itemsPerPage = 10;
   const classes = useStyles();
   const [genreChoice, setGenreChoice] = useState<number | undefined>(undefined);
-  const [genreList, setGenreList] = useState<Array<any>>([]);
+  const [genreList, setGenreList] = useState<Array<{name: string, id: number}>>([]);
   const [movieApiUrl, setMovieApiUrl] = useState<string>('');
-  const [movieList, setMovieList] = useState<Array<string>>([]);
+  const [movieList, setMovieList] = useState<Array<IMovieDBData>>([]);
   const [page, setPage] = useState<number>(1);
-  const [numberOfPages, setNumberOfPages] = useState<number>(Math.ceil(movieList.length / itemsPerPage));
+  const [numberOfPages, setNumberOfPages] = useState<number>(Math.ceil(movieList.length));
   const [view, setView] = React.useState<string | null>('carousel');
   const [carouselEdgeCaseBoolean, setCarouselEdgeCaseBoolean] = useState<boolean>(false);
   const [activeChild, setActiveChild] = useState<number>(0);
@@ -196,7 +221,7 @@ const MovieList = () => {
     setActiveChild(0);
   };
 
-  // API GET Request to retrieve movies based on genre
+  // HTTP GET Request to retrieve movies based on genre from TheMovieDB API
   const getMovies = async (): Promise<void> => {
     await axios.get(movieApiUrl)
           .then(response => {
@@ -204,6 +229,7 @@ const MovieList = () => {
             console.log(response.data.results);
             setMovieList(response.data.results);
             setNumberOfPages(response.data.total_pages);
+            console.log('movieList:', movieList);
           })
           .catch((error) => console.log('getMovies HTTP GET Request Error response:', error));
     setShowListing(true);
@@ -312,7 +338,7 @@ const MovieList = () => {
             </Box>
             <List>
               {
-                movieList.map((movie: any, index: number) => <ListingItem key={index} movie={movie} />)
+                movieList.map((movie: IMovieDBData, index: number) => <ListingItem key={index} movie={movie} />)
               }
             </List>
             <Box>
@@ -338,17 +364,17 @@ const MovieList = () => {
             autoPlay={false}
             timeout={300}
             animation={'slide'}
-            next={(next: any) => {
+            next={(next: number) => {
               (next === 2 && page === 1) && setCarouselEdgeCaseBoolean(true);
               (next === 0 && carouselEdgeCaseBoolean) && handlePageChange('click', page + 1);
             }}
-            prev={(prev: any) => {
+            prev={(prev: number) => {
               (prev === movieList.length - 1 && page === 1) && setCarouselEdgeCaseBoolean(false);
               (prev === movieList.length - 1 && page !== 1) && handlePageChange('click', page - 1);
             }}
           >
           {
-            movieList.map((movie, i) => <CarouselItem key={i} movie={movie} />)
+            movieList.map((movie: IMovieDBData, index: number) => <CarouselItem key={index} movie={movie} />)
           }
           </Carousel>
         }
