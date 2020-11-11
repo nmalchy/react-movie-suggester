@@ -7,3 +7,4 @@
 [1111/115047.452:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
 [1111/115047.452:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
 [1111/115047.452:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[1111/150928.156:ERROR:directory_reader_win.cc(43)] FindFirstFile: The system cannot find the path specified. (0x3)

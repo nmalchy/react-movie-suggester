@@ -78,7 +78,7 @@ interface IMovieListItemProps {
 }
 
 // Component for listing movies in the carousel view
-const CarouselItem = (props: IMovieListItemProps) => {
+const CarouselItem = (props: IMovieListItemProps): JSX.Element => {
 
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w500/";
   const [openMovieDbData, setOpenMovieDbData] = useState<Array<string>>([]);
@@ -107,7 +107,7 @@ const CarouselItem = (props: IMovieListItemProps) => {
 };
 
 // Component for listing movies in the list view
-const ListingItem = (props: IMovieListItemProps) => {
+const ListingItem = (props: IMovieListItemProps): JSX.Element => {
 
   const MOVIE_POSTER_API_URL = "https://image.tmdb.org/t/p/w92/";
   const [openMovieDbData, setOpenMovieDbData] = useState<Array<string>>([]);
@@ -168,7 +168,7 @@ const ListingItem = (props: IMovieListItemProps) => {
   );
 };
 
-const MovieList = () => {
+const MovieList = (): JSX.Element => {
 
   //const itemsPerPage = 10;
   const classes = useStyles();
@@ -184,7 +184,7 @@ const MovieList = () => {
   const [showListing, setShowListing] = useState<boolean>(false);
 
   // Change listing-view, reset page number to 1, and reset carousel active child
-  const handleView = (_event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+  const handleView = (_event: React.MouseEvent<HTMLElement>, newView: string | null): void => {
     setView(newView);
     setPage(1);
     setActiveChild(0);
@@ -198,7 +198,7 @@ const MovieList = () => {
   };
 
   // Function to change the page, page # is in TheMovieDB API
-  const handlePageChange = (_event: any, value: React.SetStateAction<number>) => {
+  const handlePageChange = (_event: any, value: React.SetStateAction<number>): Promise<void> => {
     setPage(value);
     return axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.REACT_APP_MOVIE_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${value}&with_genres=${genreChoice}`)
           .then(response => {
@@ -211,7 +211,7 @@ const MovieList = () => {
   };
 
   // Change Genre, reset page number to 1, and reset carousel active child
-  const handleGenreChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleGenreChange = (event: React.ChangeEvent<{ value: unknown }>): void => {
     setGenreChoice(event.target.value as unknown as number);
     setPage(1);
     setActiveChild(0);
@@ -242,7 +242,7 @@ const MovieList = () => {
   }, [genreChoice]);
 
   // The keypress event handler
-  const changeChild = (e: KeyboardEvent) => {
+  const changeChild = (e: KeyboardEvent): void => {
       if (e.key === "ArrowLeft") {
         // If supposed previous child is < 0 set it to last child
         setActiveChild((a) => (a - 1 < 0 ? movieList.length - 1 : a - 1));
@@ -260,10 +260,10 @@ const MovieList = () => {
 
 
   // Set and cleanup the event listener for carousel
-  useEffect(() => {
+  useEffect((): () => void => {
     document.addEventListener("keydown", changeChild);
 
-    return function cleanup() {
+    return function cleanup(): void {
       document.removeEventListener("keydown", changeChild);
     };
   });
