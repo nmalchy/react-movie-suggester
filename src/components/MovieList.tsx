@@ -22,6 +22,7 @@ import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import axios from 'axios';
 import Avatar from '@material-ui/core/Avatar';
+import Card from '@material-ui/core/Card';
 
 /* NOTE FOR HIRING MANAGER OR CODE REVIEWER */
 /* Because this project is for purposes of displaying my code, I have included mostly everything relevant in this one file so 
@@ -43,7 +44,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     paginator: {
       justifyContent: "center",
-      padding: "10px"
     },
     scrollBar: {
       '&::-webkit-scrollbar': {
@@ -57,26 +57,22 @@ const useStyles = makeStyles((theme: Theme) =>
         outline: '1px solid slategrey'
       }
     },
+    listingCard: {
+      minHeight: '80vh'
+    }
   }),
 );
 
+// Interface for Movie List Item
 interface IMovieDBData {
-  adult: boolean;
-  backdrop_path: string;
-  genre_ids: Array<number>;
   id: number;
-  original_language: string;
-  original_title: string;
-  overview: string;
-  popularity: number;
-  poster_path: string;
-  release_date: string;
   title: string;
-  video: boolean;
-  vote_average: number;
-  vote_count: number
+  overview: string;
+  backdrop_path: string;
+  release_date: string;
 }
 
+// Interface for Movie List Item props
 interface IMovieListItemProps {
   movie: IMovieDBData;
 }
@@ -96,7 +92,7 @@ const CarouselItem = (props: IMovieListItemProps) => {
   }, []);
 
   return (
-    <Paper style={{padding: "30px"}} elevation={50}>
+    <Paper elevation={50}>
       <h2>{props.movie.title}</h2>
       <p>{props.movie.overview}</p>
       <div>Release Date: {props.movie.release_date ? props.movie.release_date : 'N/A'} </div>
@@ -274,6 +270,8 @@ const MovieList = () => {
 
   return (
     <>
+    <br />
+    <Card className={classes.listingCard} raised>
       {showListing === false ?
         <div>
           <h1>Movie Suggester</h1>
@@ -314,7 +312,10 @@ const MovieList = () => {
             </Grid>
             <Button variant="contained" color="primary" onClick={getMovies}>Show me the movies!</Button>
         </div> :
-        <Button variant="contained" color="primary" onClick={(): void => setShowListing(false)}>Back</Button>
+        <div>
+          <br />
+          <Button variant="contained" color="primary" onClick={(): void => setShowListing(false)}>Back</Button>
+        </div>
       }
       {(view === 'list' && movieList.length > 0 && showListing === true) &&
         <Grid 
@@ -379,6 +380,7 @@ const MovieList = () => {
           </Carousel>
         }
       </Box>
+    </Card>
     </>
   );
 };
